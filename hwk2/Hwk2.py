@@ -5,7 +5,14 @@ import re
 import os
 import matplotlib.pyplot as plt
 from collections import Counter
+### DeathToGridSearch is from hwk1 and must be installed or added to $PYTHONPATH
 from DeathtoGridSearch import GridSearch
+
+
+
+### Running Hwk2.py will answer all questions and generate an output of plots with .csv files for all tested models.
+### This will take a couple hours (due to the Grid Search Object)
+####################################################################################################################
 
 class Homework2(object):
     '''
@@ -15,7 +22,7 @@ class Homework2(object):
     self.columns: list of strings
     self.data: list of lists (numeric)
     self.colmap: dict { str : int }
-    self.colmap_r dict { int : str }
+    self.colmap_r dict { int : str }x
     self.j_idxs: list of ints (numeric)
         -   indexes for subset of data where procedure code is J
     self.jdf: list of lists (numeric)
@@ -72,19 +79,19 @@ class Homework2(object):
         ANSWER
             The number of J-Codes is:  51029
         '''
-        J_codes = 0
+        j_codes = 0
 
         for rownum, row in enumerate(self.data):
             try:
                 if row[self.colmap['Procedure.Code']][0] == 'J':
-                    J_codes += 1
+                    j_codes += 1
                     self.j_idxs.append(rownum)
                     self.jdf.append(row)
             except IndexError:
                 continue
         print("QUESTION 1: A medical claim is denoted by a claim number ('Claim.Number'). Each claim consists of one or more medical lines denoted by a claim line number ('Claim.Line.Number').")
         print("\t a.) Find the number of claim lines that have J-codes.")
-        print("\t\t The number of J-Codes is: ", J_codes)
+        print("\t\t The number of J-Codes is: ", j_codes)
 
     def answer_question_1b(self):
         '''
@@ -134,7 +141,7 @@ class Homework2(object):
         ‘Provider.Payment.Amount’ field is equal to zero) for each provider versus the number of paid claims.
         --------
         ANSWER
-            Plot is located at charts/q2a.png
+            Plot is located at q2a.png
         '''
         unpaid_claims = Counter()
         paid_claims = Counter()
@@ -157,10 +164,10 @@ class Homework2(object):
         ax.set_xlim(-5,15000)
 
         try:
-            fig.savefig('charts/q2a.png')
+            fig.savefig('q2a.png')
         except IOError:
             os.mkdir('charts')
-            fig.savefig('charts/q2a.png')
+            fig.savefig('q2a.png')
 
         print('''QUESTION 2. For the following exercises, determine the number of providers that were paid for at least one J-code. Use the J-code claims for these providers to complete the following exercises.''')
         print('''\t a.) Create a scatter plot that displays the number of unpaid claims (lines where the ‘Provider.Payment.Amount’ field is equal to zero) for each provider versus the number of paid claims.''')
@@ -257,6 +264,8 @@ class Homework2(object):
                     ith_row.append(0)
             for numeric in numeric_cols:
                 ith_row.append(float(row[self.colmap[numeric]]))
+            ## Convert Provider Payment amount to binary classified value
+            ## And remove this column to ensure no y-leakage exists within the model
             if float(row[self.colmap["Provider.Payment.Amount"]]) > 0.00:
                 ith_row.append(0.0)
             else:
@@ -279,10 +288,30 @@ class Homework2(object):
         ## Dataset is now ready for the function generated in DeathtoGridSearch
         gs = GridSearch(b_df[:,:-1], b_df[:,-1])
         gs.optimize_all_models()
+        gs.save_results()
 
         print('''\t b.) Create a model to predict when a J-code is unpaid. Explain why you choose the modeling approach.''')
         
-        print('''\t\t I noticed some of the columns weere catagorical, so I removed these columns and generated dummy values for modeling reasons.  I then created balanced clas sizes by sampling the True (or did not pay) values.  This dramatically decreases the size of my dataset.  Using the methods I previously developed on the DeathToGridSearch exersize, I cross validated all of the models using 5 folds and checked many tunable parameters.  Overall, I found the XGBoost model produced the most with 256 classifiers and a depth of 5''')
+        print('''\t\t I noticed some of the columns weere catagorical, so I removed these columns and generated dummy values for modeling reasons.  I then created balanced clas sizes by sampling the True (or did not pay) values.  This dramatically decreases the size of my dataset.  Using the methods I previously developed on the DeathToGridSearch exersize, I cross validated all of the models using 5 folds and checked many tunable parameters.''')
+
+    def answer_question_3c(self):
+        '''
+        How accurate is your model at predicting unpaid claims?
+        --------
+        ANSWER
+            The model is pretty accurate at predicting unpaid claims.  Overall the best model was a XGBoosted classifier with a max depth of 43 and 101 estimators achieves an overall accuracy of 92.18% when tested across a 5 fold cross validated set with balanced classes (the unpaid claims were sampled).  Depending on the use case of this model, this accuracy could be enough to flag some cases for potential missed payments.  Since these classes are highly imbalanced, using a high threshold value for misspayment will likley missclassify more then 8% of the total observations.
+        '''
+        print('\t c.) How accurate is your model at predicting unpaid claims?')
+        print('\t\t The model is pretty accurate at predicting unpaid claims.  Overall the best model was a XGBoosted classifier with a max depth of 43 and 101 estimators achieves an overall accuracy of 92.18% when tested across a 5 fold cross validated set with balanced classes (the unpaid claims were sampled).  Depending on the use case of this model, this accuracy could be enough to flag some cases for potential missed payments.  Since these classes are highly imbalanced, using a high threshold value for misspayment will likley missclassify more then 8 percent of the total observations.')
+
+    def answer_question_3d(self):
+        '''
+        What data attributes are predominately influencing the rate of non-payment?
+        --------
+        ANSWER
+            Since the model which produced the best performance was a boosed ensemble model, true feature importances can not be interpeted from the model, 
+        '''
+        return None
 
     ### ALL QUESTIONS
     #################
@@ -296,8 +325,8 @@ class Homework2(object):
         self.answer_question_2c()
         self.answer_question_3a()
         self.answer_question_3b()
-    #     self.answer_question_3c()
-    #     self.answer_question_3d()
+        self.answer_question_3c()
+        self.answer_question_3d()
 
 if __name__ == "__main__":
     Hwk2Solver = Homework2()
