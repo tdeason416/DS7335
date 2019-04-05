@@ -12,7 +12,6 @@ from xgboost import XGBClassifier
 from collections import OrderedDict
 from itertools import cycle
 
-
 # adapt this code below to run your analysis
  
 # Recommend to be done before live class 2
@@ -323,7 +322,7 @@ class GridSearch(object):
         Run grid search on all models.
         '''
         for m_name in self.models.keys():
-            print(m_name)
+            # print(m_name)
             self.optimize_model(m_name)
 
     def output_auc_plot(self, model_idx, results):
@@ -354,7 +353,7 @@ class GridSearch(object):
         plt.xlabel('False Positive Rate')
         modi = self.models[model_idx]
         file_name = self.output_folder + "/charts/" + \
-            modi.modelname + "_" +\
+            modi.modelname + "__" +\
             "::".join([str(p) + "-" +  str(v) for p,v in modi.tuning_state.items()]) +\
             "__auc-{}.png".format(sum_aucs / self.numfolds)
         plt.savefig(file_name)
@@ -391,7 +390,7 @@ class GridSearch(object):
         rec = sum(recs) / len(recs)
         accs = sum(accs) / len(accs)
         modi = self.models[model_idx]
-        print(modi.tuning_state)
+        # print(modi.tuning_state)
         ## Area under ROC curve
         self.results_auc[model_idx]\
             [modi.numeric_state[0], modi.numeric_state[1]] = auc
@@ -430,7 +429,7 @@ class GridSearch(object):
         aucs = OrderedDict()
         settings = modi.tuning_options[param]
         self.models[model_idx].tuning_state[param] = settings[0]
-        print(self.models[model_idx].numeric_state)
+        # print(self.models[model_idx].numeric_state)
         aucs[settings[0]] = self.run_one_model(model_idx)
         for idx in np.arange(len(settings) / min_opts, len(settings), len(settings)/ min_opts):
             self.models[model_idx].tuning_state[param] = settings[int(idx)]
@@ -468,26 +467,29 @@ class GridSearch(object):
         s_0 = self.models[model_idx].tuning_options[p_0]
         s_1 = self.models[model_idx].tuning_options[p_1]
 
+        row = self.models[model_idx].numeric_state[0]
+        col = self.models[model_idx].numeric_state[1]
+
         auc_mtrx = self.results_auc[model_idx]
         dummy_mtrx = np.arange(auc_mtrx.size).reshape(*auc_mtrx.shape)
         ### find start point
         idx_min = dummy_mtrx[auc_mtrx == prev][0]
-        idx_min_x = idx_min % auc_mtrx.shape[0]
-        idx_min_y = int(idx_min / auc_mtrx.shape[1])
+        idx_min_col = idx_min % auc_mtrx.shape[0]
+        idx_min_row = int(idx_min / auc_mtrx.shape[1])
         ### find end point
         idx_max = dummy_mtrx[auc_mtrx == nxt][0]
-        idx_max_x = idx_max % auc_mtrx.shape[0]
-        idx_max_y = int(idx_max / auc_mtrx.shape[1])
+        idx_max_col = idx_max % auc_mtrx.shape[0]
+        idx_max_row = int(idx_max / auc_mtrx.shape[1])
         ### fill in missing values
         if row_col == 'row':
             self.models[model_idx].tuning_state[p_0] = s_0[num]
-            for col in range(idx_min_x + 1, idx_max_x - 1):
+            for col in range(idx_min_row + 1, idx_max_row - 1):
                 self.models[model_idx].numeric_state = [num, col]
                 self.models[model_idx].tuning_state[p_1] = s_1[col]
                 self.run_one_model(model_idx)
         elif row_col == 'col':
             self.models[model_idx].tuning_state[p_1] = s_1[num]
-            for row in range(idx_min_y + 1, idx_max_y - 1):
+            for row in range(idx_min_col + 1, idx_max_col - 1):
                 self.models[model_idx].numeric_state = [row, num]
                 self.models[model_idx].tuning_state[p_0] = s_0[row]
                 self.run_one_model(model_idx)
@@ -591,7 +593,7 @@ class GridSearch(object):
                 "-{}_" + \
                 "x:{}::y:{}.csv".format(*self.models[model_idx].parameters)
 
-            print(x_y.format('auc'))
+            # print(x_y.format('auc'))
 
             open(x_y.format('auc'), 'w').write(auc_out.strip())
             open(x_y.format('precision'), 'w').write(prec_out.strip())
@@ -606,40 +608,3 @@ if __name__ == "__main__":
     gs = GridSearch(X, y)
     gs.optimize_all_models()
     gs.save_results()
-
-    # def test_model(self):
-      # void
-
-
- 
-
-
-
-
-
-
-# M = np.array([[1,2],[3,4],[4,5],[4,5],[4,5],[4,5],[4,5],[4,5]])
-# L = np.ones(M.shape[0])
-# n_folds = 5
- 
-# data = (M, L, n_folds)
- 
-# def run(a_clf, data, clf_hyper={}):
-#   M, L, n_folds = data # unpack data containter
-#   kf = KFold(n_splits=n_folds) # Establish the cross validation
-#   ret = {} # classic explicaiton of results
- 
-#   for ids, (train_index, test_index) in enumerate(kf.split(M, L)):
-#     clf = a_clf(**clf_hyper) # unpack paramters into clf is they exist
- 
-#     clf.fit(M[train_index], L[train_index])
- 
-#     pred = clf.predict(M[test_index])
- 
-#     ret[ids]= {'clf': clf,
-#                'train_index': train_index,
-#                'test_index': test_index,
-#                'accuracy': accuracy_score(L[test_index], pred)}
-#   return ret
- 
-# results = run(RandomForestClassifier, data, clf_hyper={})

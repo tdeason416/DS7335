@@ -68,6 +68,7 @@ class Homework2(object):
         self.colmap_r = {v:k for k,v in self.colmap.items()}
         self.j_idxs = []
         self.jdf = []
+        self.model_cols = []
 
     ### QUESTION 1
     ###############
@@ -250,13 +251,13 @@ class Homework2(object):
                     dummy_cols[col][row[self.colmap[col]]] = {rownum}
         for colname, dumdict in dummy_cols.items():
             for dummy in dumdict.keys():
-                model_cols.append("{}${}".format(colname, dummy))
+                self.model_cols.append("{}${}".format(colname, dummy))
         
         ## Add dummy cols to new data set (model_df)
         model_df = []
         for idx, row in enumerate(self.jdf):
             ith_row = []
-            for colname in model_cols:
+            for colname in self.model_cols:
                 col, val = colname.split("$")
                 if idx in dummy_cols[col][val]:
                     ith_row.append(1)
@@ -274,7 +275,7 @@ class Homework2(object):
         
         ## Retain column names for future reference
         for numeric_col in numeric_cols:
-            model_cols.append(numeric_col)
+            self.model_cols.append(numeric_col)
         
         ## Turn model_df into numpy array to use when modeling
         np_df = np.array(model_df)
@@ -309,10 +310,29 @@ class Homework2(object):
         What data attributes are predominately influencing the rate of non-payment?
         --------
         ANSWER
-            Since the model which produced the best performance was a boosed ensemble model, true feature importances can not be interpeted from the model, 
+            Since the model which produced the best performance was a boosed ensemble model, true feature importances can not be interpeted from the model.  Using the Random Forst model to find which features were split on mose often, these showed up:
+                Claim.Charge.Amount
+                Procedure.Code -- J3262
+                Procedure.Code -- J1566
+                Procedure.Code -- J0180
+                Network.ID -- MIMAPD000001
+                Procedure.Code -- J2310
+                Procedure.Code -- J9250
+                Agreement.ID -- LH000595QM01
+                Procedure.Code --J0878
         '''
-        return None
-
+        print("\t d.) What data attributes are predominately influencing the rate of non-payment?")
+        print("\t\t Since the model which produced the best performance was a boosed ensemble model, true feature importances can not be interpeted from the model.  Using the Random Forst model to find which features were split on mose often, these showed up:")
+        print('''\t\t\t Claim.Charge.Amount
+                \t\t\t Procedure.Code -- J3262
+                \t\t\t Procedure.Code -- J1566
+                \t\t\t Procedure.Code -- J0180
+                \t\t\t Network.ID -- MIMAPD000001
+                \t\t\t Procedure.Code -- J2310
+                \t\t\t Procedure.Code -- J9250
+                \t\t\t Agreement.ID -- LH000595QM01
+                \t\t\t Procedure.Code --J0878''')
+        
     ### ALL QUESTIONS
     #################
 
